@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Web Photobooth</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .booth-container {
+            max-width: 500px;
+            margin: auto;
+            position: relative;
+        }
+        video, canvas {
+            width: 100%;
+            max-height: 400px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #000;
+        }
+        canvas {
+            display: none; /* Itatago muna hanggang sa mapicturan */
+        }
+        button {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Mini Photobooth</h2>
+    <div class="booth-container">
+        <!-- Live camera feed -->
+        <video id="video" autoplay playsinline></video>
+        <!-- Kinuhang litrato -->
+        <canvas id="canvas"></canvas>
+        <br>
+        <button id="capture-btn">📸 Capture</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const captureBtn = document.getElementById('capture-btn');
+
+// Function para buksan ang camera
+async function initCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+        });
+        video.srcObject = stream;
+    } catch (err) {
+        console.error("Hindi ma-access ang camera: ", err);
+        alert("Pakibigyan ng pahintulot ang browser na gamitin ang camera.");
+    }
+}
+captureBtn.addEventListener('click', () => {
+    const context = canvas.getContext('2d');
+    
+    // Sundin ang sukat ng video feed
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // I-draw ang video frame sa canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Palitan ang view mula video papuntang canvas
+    video.style.display = 'none';
+    canvas.style.display = 'block';
+    
+    // Palitan ang button text para sa download o retake
+    captureBtn.textContent = '📥 Download Photo';
+    
+    // Dito mo rin pwedeng lagyan ng code para i-download o i-save agad
+    downloadPhoto();
+});
+
+function downloadPhoto() {
+    const dataURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'photobooth-snapshot.png';
+    link.href = dataURL;
+    // Pwedeng i-trigger ang download o ipakita sa user
